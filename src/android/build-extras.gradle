@@ -1,0 +1,10 @@
+repositories {
+    maven { url 'https://repo1.maven.org/maven2/' }
+}
+
+dependencies {
+    //增加以下依赖
+    implementation  'com.umeng.umsdk:common:9.4.4'// 必选
+    implementation  'com.umeng.umsdk:asms:1.4.1'// 必选
+    implementation 'com.umeng.umsdk:apm:1.5.2' // 错误分析升级为独立SDK，看crash数据请一定集成，可选
+}

@@ -8,7 +8,9 @@ import java.util.Map;
 
 import android.content.Context;
 import android.util.Log;
+
 import com.umeng.analytics.MobclickAgent;
+
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
@@ -16,6 +18,7 @@ import org.apache.cordova.CordovaWebView;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import com.umeng.commonsdk.UMConfigure;
 
 
@@ -31,153 +34,164 @@ import com.umeng.commonsdk.UMConfigure;
  */
 
 public class AnalyticsSDK extends CordovaPlugin {
-    private Context mContext = null;
+  private Context mContext = null;
+  private static final  String TAG = AnalyticsSDK.class.getSimpleName();
 
-    @Override
-    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
-        super.initialize(cordova, webView);
-        this.mContext = cordova.getActivity().getApplicationContext();
-    }
+  @Override
+  public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+    super.initialize(cordova, webView);
+    this.mContext = cordova.getActivity().getApplicationContext();
+    UMConfigure.setLogEnabled(true);
+  }
 
-    @Override
-    public void onResume(boolean multitasking) {
-        super.onResume(multitasking);
+  @Override
+  public void onResume(boolean multitasking) {
+    super.onResume(multitasking);
 
-        MobclickAgent.onResume(mContext);
-    }
+    MobclickAgent.onResume(mContext);
+  }
 
-    @Override
-    public void onPause(boolean multitasking) {
-        super.onPause(multitasking);
-        Log.d("UMPlugin", "onPause");
-        MobclickAgent.onPause(mContext);
-    }
+  @Override
+  public void onPause(boolean multitasking) {
+    super.onPause(multitasking);
+    Log.d(TAG, "onPause");
+    MobclickAgent.onPause(mContext);
+  }
 
-    @Override
-    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-        Log.d("UMPlugin", "execute action:" + action + "|||args:" + args);
-     
-        String[] deviceInfo = UMConfigure.getTestDeviceInfo(mContext);
-        Log.d("UMPlugin","{\"device_id\":\"" + deviceInfo[0] + "\",\"mac\":\"" + deviceInfo[1] + "\"}");
-        if (action.equals("onEvent")) {
-            String eventId = args.getString(0);
-            MobclickAgent.onEvent(mContext, eventId);
-            return true;
-        } else if (action.equals("onEventWithLabel")) {
-            String eventId = args.getString(0);
-            String label = args.getString(1);
-            MobclickAgent.onEvent(mContext, eventId, label);
-            return true;
-        } else if (action.equals("onEventWithParameters")) {
-            String eventId = args.getString(0);
-            JSONObject obj = args.getJSONObject(1);
-            Map<String, String> map = new HashMap<String, String>();
-            Iterator<String> it = obj.keys();
-            while (it.hasNext()) {
-                String key = String.valueOf(it.next());
-                Object o = obj.get(key);
-                if (o instanceof Integer) {
-                    String value = String.valueOf(o);
-                    map.put(key, value);
-                } else if (o instanceof String) {
-                    String strValue = (String) o;
-                    map.put(key, strValue);
-                }
-            }
-            MobclickAgent.onEvent(mContext, eventId, map);
-            return true;
-        } else if (action.equals("onEventWithCounter")) {
-            String eventId = args.getString(0);
-            JSONObject obj = args.getJSONObject(1);
-            Map<String, String> map = new HashMap<String, String>();
-            Iterator<String> it = obj.keys();
-            while (it.hasNext()) {
-                String key = String.valueOf(it.next());
-                Object o = obj.get(key);
-                if (o instanceof Integer) {
-                    String value = String.valueOf(o);
-                    map.put(key, value);
-                } else if (o instanceof String) {
-                    String strValue = (String) o;
-                    map.put(key, strValue);
-                }
-            }
-            int value = args.getInt(2);
-            MobclickAgent.onEventValue(mContext, eventId, map, value);
-            return true;
-        } else if (action.equals("onPageBegin")) {
-            String pageName = args.getString(0);
-            Log.d("UMPlugin onPageStart page name:", pageName);
-            MobclickAgent.onPageStart(pageName);
-            return true;
-        } else if (action.equals("onPageEnd")) {
-            String pageName = args.getString(0);
-            MobclickAgent.onPageEnd(pageName);
-            Log.d("UMPlugin onPageEnd page name:", pageName);
-            return true;
-        } else if (action.equals("getDeviceId")) {
-            try {
-                android.telephony.TelephonyManager tm = (android.telephony.TelephonyManager) mContext
-                    .getSystemService(Context.TELEPHONY_SERVICE);
-                String deviceId = tm.getDeviceId();
-                callbackContext.success(deviceId);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return true;
-        } else if (action.equals("profileSignInWithPUID")) {
-            String puid = args.getString(0);
-            MobclickAgent.onProfileSignIn(puid);
-            return true;
-        } else if (action.equals("profileSignInWithPUIDWithProvider")) {
-            String provider = args.getString(0);
-            String puid = args.getString(1);
-            MobclickAgent.onProfileSignIn(provider, puid);
-            return true;
-        } else if (action.equals("profileSignOff")) {
-            MobclickAgent.onProfileSignOff();
-            return true;
-        } else if (action.equals("onEventObject")) {
-            String eventName = args.getString(0);
-            JSONObject obj = args.getJSONObject(1);
-            Map<String, Object> map = new HashMap<String, Object>();
-            Iterator<String> it = obj.keys();
-            while (it.hasNext()) {
-                String key = String.valueOf(it.next());
-                Object o = obj.get(key);
-                map.put(key, o);
-            }
-            MobclickAgent.onEventObject(mContext, eventName, map);
-            return true;
-        } else if (action.equals("registerPreProperties")) {
-            for(int i=0 ; i < args.length() ;i++)
-            {
-                //获取每一个JsonObject对象
-                MobclickAgent.registerPreProperties(mContext, args.getJSONObject(i));
-                //String res = MobclickAgent.getPreProperties(mContext).toString();
-            }
-            return true;
-        } else if (action.equals("unregisterPreProperty")) {
-            String propertyName = args.getString(0);
-            MobclickAgent.unregisterPreProperty(mContext, propertyName);
-            return true;
-        } else if (action.equals("getPreProperties")) {
-            String res = MobclickAgent.getPreProperties(mContext).toString();
-            callbackContext.success(res);
-            return true;
-        } else if (action.equals("clearPreProperties")) {
-            MobclickAgent.clearPreProperties(mContext);
-            return true;
-        } else if (action.equals("setFirstLaunchEvent")) {
-            JSONArray array = args.getJSONArray(0);
-            List<String> list = new ArrayList<String>();
-            for (int i = 0; i < array.length(); i++) {
-                list.add(array.getString(i));
-            }
-            MobclickAgent.setFirstLaunchEvent(mContext, list);
+  @Override
+  public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+    Log.d(TAG, "execute action:" + action + "|||args:" + args);
 
-            return true;
+    String[] deviceInfo = UMConfigure.getTestDeviceInfo(mContext);
+    Log.d(TAG, "{\"device_id\":\"" + deviceInfo[0] + "\",\"mac\":\"" + deviceInfo[1] + "\"}");
+    if (action.equals("init")) {
+      String key = args.getString(0);
+      String channel = args.getString(1);
+      UMConfigure.init(mContext,key,channel,UMConfigure.DEVICE_TYPE_PHONE,"");
+      return true;
+    } else if (action.equals("preInit")) {
+      String key = args.getString(0);
+      String channel = args.getString(1);
+      UMConfigure.preInit(mContext,key,channel);
+      return true;
+    } else if (action.equals("onEvent")) {
+      String eventId = args.getString(0);
+      MobclickAgent.onEvent(mContext, eventId);
+      return true;
+    } else if (action.equals("onEventWithLabel")) {
+      String eventId = args.getString(0);
+      String label = args.getString(1);
+      MobclickAgent.onEvent(mContext, eventId, label);
+      return true;
+    } else if (action.equals("onEventWithParameters")) {
+      String eventId = args.getString(0);
+      JSONObject obj = args.getJSONObject(1);
+      Map<String, String> map = new HashMap<String, String>();
+      Iterator<String> it = obj.keys();
+      while (it.hasNext()) {
+        String key = String.valueOf(it.next());
+        Object o = obj.get(key);
+        if (o instanceof Integer) {
+          String value = String.valueOf(o);
+          map.put(key, value);
+        } else if (o instanceof String) {
+          String strValue = (String) o;
+          map.put(key, strValue);
         }
-        return false;
+      }
+      MobclickAgent.onEvent(mContext, eventId, map);
+      return true;
+    } else if (action.equals("onEventWithCounter")) {
+      String eventId = args.getString(0);
+      JSONObject obj = args.getJSONObject(1);
+      Map<String, String> map = new HashMap<String, String>();
+      Iterator<String> it = obj.keys();
+      while (it.hasNext()) {
+        String key = String.valueOf(it.next());
+        Object o = obj.get(key);
+        if (o instanceof Integer) {
+          String value = String.valueOf(o);
+          map.put(key, value);
+        } else if (o instanceof String) {
+          String strValue = (String) o;
+          map.put(key, strValue);
+        }
+      }
+      int value = args.getInt(2);
+      MobclickAgent.onEventValue(mContext, eventId, map, value);
+      return true;
+    } else if (action.equals("onPageBegin")) {
+      String pageName = args.getString(0);
+      Log.d(TAG, pageName);
+      MobclickAgent.onPageStart(pageName);
+      return true;
+    } else if (action.equals("onPageEnd")) {
+      String pageName = args.getString(0);
+      MobclickAgent.onPageEnd(pageName);
+      Log.d(TAG, pageName);
+      return true;
+    } else if (action.equals("getDeviceId")) {
+      try {
+        android.telephony.TelephonyManager tm = (android.telephony.TelephonyManager) mContext
+          .getSystemService(Context.TELEPHONY_SERVICE);
+        String deviceId = tm.getDeviceId();
+        callbackContext.success(deviceId);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+      return true;
+    } else if (action.equals("profileSignInWithPUID")) {
+      String puid = args.getString(0);
+      MobclickAgent.onProfileSignIn(puid);
+      return true;
+    } else if (action.equals("profileSignInWithPUIDWithProvider")) {
+      String provider = args.getString(0);
+      String puid = args.getString(1);
+      MobclickAgent.onProfileSignIn(provider, puid);
+      return true;
+    } else if (action.equals("profileSignOff")) {
+      MobclickAgent.onProfileSignOff();
+      return true;
+    } else if (action.equals("onEventObject")) {
+      String eventName = args.getString(0);
+      JSONObject obj = args.getJSONObject(1);
+      Map<String, Object> map = new HashMap<String, Object>();
+      Iterator<String> it = obj.keys();
+      while (it.hasNext()) {
+        String key = String.valueOf(it.next());
+        Object o = obj.get(key);
+        map.put(key, o);
+      }
+      MobclickAgent.onEventObject(mContext, eventName, map);
+      return true;
+    } else if (action.equals("registerPreProperties")) {
+      for (int i = 0; i < args.length(); i++) {
+        //获取每一个JsonObject对象
+        MobclickAgent.registerPreProperties(mContext, args.getJSONObject(i));
+        //String res = MobclickAgent.getPreProperties(mContext).toString();
+      }
+      return true;
+    } else if (action.equals("unregisterPreProperty")) {
+      String propertyName = args.getString(0);
+      MobclickAgent.unregisterPreProperty(mContext, propertyName);
+      return true;
+    } else if (action.equals("getPreProperties")) {
+      String res = MobclickAgent.getPreProperties(mContext).toString();
+      callbackContext.success(res);
+      return true;
+    } else if (action.equals("clearPreProperties")) {
+      MobclickAgent.clearPreProperties(mContext);
+      return true;
+    } else if (action.equals("setFirstLaunchEvent")) {
+      JSONArray array = args.getJSONArray(0);
+      List<String> list = new ArrayList<String>();
+      for (int i = 0; i < array.length(); i++) {
+        list.add(array.getString(i));
+      }
+      MobclickAgent.setFirstLaunchEvent(mContext, list);
+
+      return true;
     }
+    return false;
+  }
 }
