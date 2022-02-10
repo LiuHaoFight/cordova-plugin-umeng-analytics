@@ -6,8 +6,8 @@
 //
 
 #import "AnalyticsSDK.h"
-#import <UMAnalytics/MobClick.h>
-
+#import <UMCommon/UMCommon.h>
+#import <UMCommon/MobClick.h>
 
 @interface AnalyticsSDK ()
 
@@ -28,8 +28,15 @@
 }
 #endif
 
+- (void)init:(CDVInvokedUrlCommand*)command {
+    NSString *key = [command.arguments objectAtIndex:0];
+    NSString *channel = [command.arguments objectAtIndex:1];
+    [UMConfigure initWithAppkey:key channel:channel];
+}
 
-
+- (void)preInit:(CDVInvokedUrlCommand*)command {
+    
+}
 
 - (void)onEvent:(CDVInvokedUrlCommand*)command {
     NSString *eventId = [command.arguments objectAtIndex:0];

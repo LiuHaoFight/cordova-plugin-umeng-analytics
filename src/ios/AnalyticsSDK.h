@@ -11,7 +11,8 @@
 
 @interface AnalyticsSDK : CDVPlugin
 
-
+- (void)init:(CDVInvokedUrlCommand*)command;
+- (void)preInit:(CDVInvokedUrlCommand*)command;
 - (void)onEvent:(CDVInvokedUrlCommand*)command;
 - (void)onEventWithLabel:(CDVInvokedUrlCommand*)command;
 - (void)onEventWithParameters:(CDVInvokedUrlCommand*)command;
